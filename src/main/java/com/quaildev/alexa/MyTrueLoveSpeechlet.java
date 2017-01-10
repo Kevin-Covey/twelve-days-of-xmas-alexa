@@ -8,9 +8,11 @@ import org.apache.log4j.Logger;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.stream.Collectors;
 
+import static com.quaildev.alexa.MyTrueLoveSpeechlet.Intents.MY_TRUE_LOVE;
 import static java.lang.String.format;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.joining;
@@ -20,6 +22,15 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 public class MyTrueLoveSpeechlet implements Speechlet {
 
     private static final Logger log = Logger.getLogger(MyTrueLoveSpeechlet.class);
+    private final MyTrueLove myTrueLove;
+
+    public MyTrueLoveSpeechlet(MyTrueLove myTrueLove) {
+        this.myTrueLove = myTrueLove;
+    }
+
+    static final class Intents {
+        static final String MY_TRUE_LOVE = "MyTrueLoveIntent";
+    }
 
     public void onSessionStarted(SessionStartedRequest request, Session session) throws SpeechletException {
     }
@@ -32,7 +43,7 @@ public class MyTrueLoveSpeechlet implements Speechlet {
         Intent intent = request.getIntent();
         String intentName = intent != null ? intent.getName() : null;
 
-        if ("MyTrueLoveIntent".equals(intentName)) {
+        if (MY_TRUE_LOVE.equals(intentName)) {
             return createResponse(intent);
         }
         throw new SpeechletException("Invalid Intent");
@@ -41,9 +52,9 @@ public class MyTrueLoveSpeechlet implements Speechlet {
     private SpeechletResponse createResponse(Intent intent) {
         Day day = translateDayFromSlot(intent);
 
-        MyTrueLove myTrueLove = new MyTrueLove();
         myTrueLove.onDay(day.getIntValue());
-        Iterator<String> descendingIterator = myTrueLove.hasGivenToMe().stream()
+        List<String> gifts = myTrueLove.hasGivenToMe();
+        Iterator<String> descendingIterator = gifts.stream()
                 .collect(Collectors.toCollection(LinkedList::new))
                 .descendingIterator();
         String responseDialogue = stream(spliteratorUnknownSize(descendingIterator, Spliterator.ORDERED), false)
