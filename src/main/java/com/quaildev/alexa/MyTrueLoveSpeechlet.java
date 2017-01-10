@@ -6,8 +6,16 @@ import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.quaildev.lean.tech.MyTrueLove;
 import org.apache.log4j.Logger;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Spliterator;
+import java.util.stream.Collectors;
+
 import static java.lang.String.format;
+import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.StreamSupport.stream;
+import static org.apache.commons.lang3.StringUtils.isNumeric;
 
 public class MyTrueLoveSpeechlet implements Speechlet {
 
@@ -31,14 +39,16 @@ public class MyTrueLoveSpeechlet implements Speechlet {
     }
 
     private SpeechletResponse createResponse(Intent intent) {
-        String dayValue = intent.getSlot("Day").getValue();
-        log.debug("Day value from slot is " + dayValue);
-        int whichDay = Integer.parseInt(dayValue.replaceAll("[a-zA-Z]", ""));
-        Day day = Day.forIntValue(whichDay);
+        Day day = translateDayFromSlot(intent);
 
         MyTrueLove myTrueLove = new MyTrueLove();
-        myTrueLove.onDay(whichDay);
-        String responseDialogue = myTrueLove.hasGivenToMe().stream().collect(joining(", ", preambleFor(day), ""));
+        myTrueLove.onDay(day.getIntValue());
+        Iterator<String> descendingIterator = myTrueLove.hasGivenToMe().stream()
+                .collect(Collectors.toCollection(LinkedList::new))
+                .descendingIterator();
+        String responseDialogue = stream(spliteratorUnknownSize(descendingIterator, Spliterator.ORDERED), false)
+                .collect(joining(", ", preambleFor(day), ""))
+                .replaceAll("-", " ");
 
         int indexOfFirstComma = responseDialogue.indexOf(',');
         int indexOfLastComma = responseDialogue.lastIndexOf(',');
@@ -51,12 +61,21 @@ public class MyTrueLoveSpeechlet implements Speechlet {
         return SpeechletResponse.newTellResponse(outputSpeech);
     }
 
+    private Day translateDayFromSlot(Intent intent) {
+        String slotValue = intent.getSlot("Day").getValue();
+        log.debug("Day value from slot is " + slotValue);
+        String dayString = slotValue.replaceAll("[a-zA-Z]", "");
+        return isNumeric(dayString)
+                ? Day.forIntValue(Integer.valueOf(dayString))
+                : Day.valueOf(slotValue.toUpperCase());
+    }
+
     private String preambleFor(Day day) {
         return format("By the %s day of christmas, your true love had given to you:  ", day);
     }
 
     private String replaceLastCommaWithAnd(String responseDialogue, int indexOfLastComma) {
-        return new StringBuilder(responseDialogue).replace(indexOfLastComma, indexOfLastComma + 1, " and").toString();
+        return new StringBuilder(responseDialogue).replace(indexOfLastComma, indexOfLastComma + 1, ", and").toString();
     }
 
     public void onSessionEnded(SessionEndedRequest request, Session session) throws SpeechletException {
