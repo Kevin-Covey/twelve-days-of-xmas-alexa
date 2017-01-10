@@ -1,0 +1,13 @@
+{
+  "intents": [
+    {
+      "intent": "MyTrueLoveIntent",
+      "slots": [
+        {
+          "name": "Day",
+          "type": "LIST_OF_DAYS"
+        }
+      ]
+    }
+  ]
+}
