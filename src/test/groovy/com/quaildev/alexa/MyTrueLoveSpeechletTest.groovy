@@ -9,7 +9,7 @@ import spock.lang.Specification
 
 import static com.quaildev.alexa.MyTrueLoveSpeechlet.Intents.MY_TRUE_LOVE
 
-class MyTrueLoveSpeechletSpec extends Specification {
+class MyTrueLoveSpeechletTest extends Specification {
 
     IntentRequest mockRequest = Mock()
     MyTrueLove mockTrueLove = Mock()
