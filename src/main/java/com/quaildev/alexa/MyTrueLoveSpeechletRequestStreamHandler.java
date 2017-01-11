@@ -1,7 +1,6 @@
 package com.quaildev.alexa;
 
 import com.amazon.speech.speechlet.lambda.SpeechletRequestStreamHandler;
-import com.quaildev.lean.tech.MyTrueLove;
 
 import java.util.HashSet;
 
@@ -11,7 +10,7 @@ public class MyTrueLoveSpeechletRequestStreamHandler extends SpeechletRequestStr
 
     public MyTrueLoveSpeechletRequestStreamHandler() {
         super(
-                new MyTrueLoveSpeechlet(new MyTrueLove()),
+                new MyTrueLoveSpeechlet(new LoveShack()),
                 new HashSet<String>(singletonList("amzn1.ask.skill.c5ad38f7-9e42-435d-8d41-a100d2280d4e"))
         );
     }

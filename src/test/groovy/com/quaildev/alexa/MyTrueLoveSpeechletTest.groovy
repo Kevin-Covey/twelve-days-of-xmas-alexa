@@ -12,11 +12,16 @@ import static com.quaildev.alexa.MyTrueLoveSpeechlet.Intents.MY_TRUE_LOVE
 class MyTrueLoveSpeechletTest extends Specification {
 
     IntentRequest mockRequest = Mock()
+    LoveShack mockLoveShack = Mock()
     MyTrueLove mockTrueLove = Mock()
-    MyTrueLoveSpeechlet speechlet = new MyTrueLoveSpeechlet(mockTrueLove)
+    MyTrueLoveSpeechlet speechlet = new MyTrueLoveSpeechlet(mockLoveShack)
+
+    def setup() {
+        mockLoveShack.makeLove() >> mockTrueLove
+    }
 
     def 'bogus intent throws exception'() {
-        setup:
+        given:
         def intent = Intent.builder().withName('BogusIntent').build()
         mockRequest.intent >> intent
 
@@ -27,9 +32,21 @@ class MyTrueLoveSpeechletTest extends Specification {
         thrown(SpeechletException)
     }
 
+    def 'makes love on every request'() {
+        given:
+        myTrueLoveIntentWithDaySlotValueAs 'first'
+        mockTrueLove.hasGivenToMe() >> []
+
+        when:
+        speechlet.onIntent(mockRequest, null)
+
+        then:
+        1 * mockLoveShack.makeLove() >> mockTrueLove
+    }
+
     def 'sets day correctly for wordy descriptions'() {
-        setup:
-        setupMyTrueLoveIntentWithDaySlotValueAs slotValue
+        given:
+        myTrueLoveIntentWithDaySlotValueAs slotValue
         mockTrueLove.hasGivenToMe() >> []
 
         when:
@@ -55,8 +72,8 @@ class MyTrueLoveSpeechletTest extends Specification {
     }
 
     def 'sets day correctly for numberish descriptions'() {
-        setup:
-        setupMyTrueLoveIntentWithDaySlotValueAs slotValue
+        given:
+        myTrueLoveIntentWithDaySlotValueAs slotValue
         mockTrueLove.hasGivenToMe() >> []
 
         when:
@@ -82,8 +99,8 @@ class MyTrueLoveSpeechletTest extends Specification {
     }
 
     def 'singleton response (first day)'() {
-        setup:
-        setupMyTrueLoveIntentWithDaySlotValueAs 'first'
+        given:
+        myTrueLoveIntentWithDaySlotValueAs 'first'
         mockTrueLove.hasGivenToMe() >> ['1 partridge in a pear tree']
 
         when:
@@ -95,8 +112,8 @@ class MyTrueLoveSpeechletTest extends Specification {
     }
 
     def "many item response, order is reversed and there's an 'and' before the last item"() {
-        setup:
-        setupMyTrueLoveIntentWithDaySlotValueAs 'third'
+        given:
+        myTrueLoveIntentWithDaySlotValueAs 'third'
         mockTrueLove.hasGivenToMe() >> [firstGift, secondGift, thirdGift]
 
         when:
@@ -112,8 +129,8 @@ class MyTrueLoveSpeechletTest extends Specification {
     }
 
     def 'response ends session'() {
-        setup:
-        setupMyTrueLoveIntentWithDaySlotValueAs 'first'
+        given:
+        myTrueLoveIntentWithDaySlotValueAs 'first'
         mockTrueLove.hasGivenToMe() >> []
 
         when:
@@ -123,9 +140,10 @@ class MyTrueLoveSpeechletTest extends Specification {
         response.shouldEndSession
     }
 
-    private void setupMyTrueLoveIntentWithDaySlotValueAs(String slotValue) {
+    private void myTrueLoveIntentWithDaySlotValueAs(String slotValue) {
         def daySlot = Slot.builder().withName('Day').withValue(slotValue).build()
         def intent = Intent.builder().withName(MY_TRUE_LOVE).withSlots(['Day': daySlot]).build()
         mockRequest.intent >> intent
     }
+
 }

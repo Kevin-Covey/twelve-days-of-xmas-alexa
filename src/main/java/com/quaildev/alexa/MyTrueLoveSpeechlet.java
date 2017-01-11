@@ -22,10 +22,10 @@ import static org.apache.commons.lang3.StringUtils.isNumeric;
 public class MyTrueLoveSpeechlet implements Speechlet {
 
     private static final Logger log = Logger.getLogger(MyTrueLoveSpeechlet.class);
-    private final MyTrueLove myTrueLove;
+    private final LoveShack loveShack;
 
-    public MyTrueLoveSpeechlet(MyTrueLove myTrueLove) {
-        this.myTrueLove = myTrueLove;
+    public MyTrueLoveSpeechlet(LoveShack loveShack) {
+        this.loveShack = loveShack;
     }
 
     static final class Intents {
@@ -52,6 +52,7 @@ public class MyTrueLoveSpeechlet implements Speechlet {
     private SpeechletResponse createResponse(Intent intent) {
         Day day = translateDayFromSlot(intent);
 
+        MyTrueLove myTrueLove = loveShack.makeLove();
         myTrueLove.onDay(day.getIntValue());
         List<String> gifts = myTrueLove.hasGivenToMe();
         Iterator<String> descendingIterator = gifts.stream()
